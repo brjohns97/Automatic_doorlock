@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# Start ntpd
+#
+
+server=pool.ntp.org
+
+TZ=${timezone:-America/Chicago}
+export TZ
+[ -e /etc/TZ ] && rm /etc/TZ
+ln -s /usr/share/zoneinfo/uclibc/$TZ /etc/TZ
+
+start() {
+	echo -n "Starting ntpd: "
+	ntpd -p $server
+	pidof ntpd > /var/run/ntpd.pid
+	echo "OK"
+}
+
+stop() {
+	echo -n "Stopping ntpd: "
+	kill -TERM `cat /var/run/ntpd.pid`
+	echo "OK"
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart|reload)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac
+
+exit $?
+

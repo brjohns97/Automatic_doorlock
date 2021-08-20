@@ -1,0 +1,56 @@
+#!/bin/sh
+
+do_start () {
+	echo -n "Starting Doorlock service: "
+	python -B /program/doorlock.py &
+	pidof python > /var/run/doorlock.pid
+	
+	echo -n "Checking for Doorlock watchdog script: "
+	if ! pidof watchdog.sh > /dev/null; then
+		echo "not running."
+		echo -n "Starting Doorlock watchdog script: "
+		if [ -x /program/watchdog.sh ]; then
+			/program/watchdog.sh &
+			echo $! > /var/run/watchdog.pid
+			echo "OK"
+		else
+			echo 'not available.'
+		fi
+	else
+		echo "already running."
+	fi
+
+	echo ""
+}
+
+do_stop () {
+	echo -n "Stopping Doorlock service: "
+	[ -f /var/run/doorlock.pid ] && kill -2 `cat /var/run/doorlock.pid`
+	[ -f /var/run/watchdog.pid ] && kill -2 `cat /var/run/watchdog.pid`
+	echo "OK"
+}
+
+do_restart () {
+	do_stop
+	do_start
+}
+
+case "$1" in
+	start)
+		do_start
+		;;
+
+	stop)
+		do_stop
+		;;
+
+	restart|reload)
+		do_restart
+		;;
+
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac
+
+exit $?

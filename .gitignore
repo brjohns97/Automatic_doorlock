@@ -1,0 +1,5 @@
+password.txt
+update.sh
+S50lighttpd
+S30crond
+S80usbtty
