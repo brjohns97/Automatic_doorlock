@@ -10,7 +10,7 @@ echo `date` Watchdog started. > $LOG
 check_fail () {
    FAILS=$(($FAILS + 1))
    echo `date` Failure count is now $FAILS. >> $LOG
-   if [ $FAILS -gt 5 ]; then
+   if [ $FAILS -gt 15 ]; then
       echo `date` 'Watchdog detected system instability ('$FAILS' failures)' >> $LOG
       echo `date` Watchdog is rebooting. >> $LOG
       echo `date` Final report: `uptime` >> $LOG
@@ -46,7 +46,7 @@ while true; do
    #fi
    if ! pidof python > /dev/null; then
       # Monitor service has stopped; do the same
-      echo `date` tank monitor is not running. Restarting. >> $LOG
+      echo `date` doorlock is not running. Restarting. >> $LOG
       check_fail
       restart_monitor
    fi

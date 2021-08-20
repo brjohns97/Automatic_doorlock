@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from enum import Enum
 import subprocess
+import logging
 
 gpio_pin = 7
 GPIO.setwarnings(False) # Ignore warning for now
@@ -22,13 +23,19 @@ def lock_door():
 def unlock_door():
     GPIO.output(gpio_pin, GPIO.LOW) # Turn off lock if we are home
 
-
 class State(Enum):
     BRAD_GONE = 1
     BRAD_ARRIVED = 2
     BRAD_CHILLIN = 3
     BRAD_LEAVING = 4
 
+# Initialize some stuff
+logging.basicConfig(
+    level=logging.INFO,
+    filename='/dev/shm/doorlock.log',
+    format='%(asctime)s [%(levelname)s] - %(message)s',
+    datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger()  # get the root logger
 
 state = State.BRAD_CHILLIN
 prev_state = State.BRAD_CHILLIN
@@ -36,7 +43,9 @@ phone_present = True
 arrive_time = 0
 gone_count = 0
 
+# call some functions beofre looping forever
 lock_door()
+
 
 while True:
     phone_present = ping('192.168.1.42')
@@ -71,7 +80,8 @@ while True:
 
     # Helpful debugging
     if state != prev_state:
-        print("State went from {} ---> {}".format(prev_state,state))
+        logging.info(f'State went from {prev_state} ---> {state}')
+        print(logger.handlers)
     prev_state = state
 
     time.sleep(0.25)
