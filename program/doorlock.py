@@ -5,10 +5,20 @@ from enum import Enum
 import subprocess
 import logging
 
-gpio_pin = 7
-GPIO.setwarnings(False) # Ignore warning for now
-GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
-GPIO.setup(gpio_pin, GPIO.OUT, initial=GPIO.LOW) # Set pin 8 to be an output pin and set initial value to low (off)
+# import "my" created classes
+from gmailer import Gmailer
+
+# setting up the motor output gpio
+gpio_pin = 4
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(gpio_pin, GPIO.OUT, initial=GPIO.LOW)
+
+
+# Create an emailer for when the door locks/unlocks
+with open('/program/gmailpw.txt','r') as file:
+    gmailpw = file.read()
+mailer = Gmailer('bradsraspberrypi@gmail.com', gmailpw, 'chuggles8cookies@gmail.com', 'automatic doorlock')
 
 def ping(host):
     # Building the command
@@ -19,9 +29,13 @@ def ping(host):
 
 def lock_door():
     GPIO.output(gpio_pin, GPIO.HIGH) # Turn on lock if we are gone
+    # send confirmation email
+    mailer.send_gmail("Door locked")
 
 def unlock_door():
     GPIO.output(gpio_pin, GPIO.LOW) # Turn off lock if we are home
+    # send confirmation email
+    mailer.send_gmail("Door unlocked")
 
 class State(Enum):
     BRAD_GONE = 1
@@ -71,8 +85,8 @@ while True:
     # Always lock the door if it sees that my phone isn't here
     if not phone_present and state!=State.BRAD_GONE:
         gone_count = gone_count + 1
-        # Ping needs to not see my phone two times in a row for it to think im gone
-        if gone_count > 1:
+        # Ping needs to not see my phone three times in a row for it to think im gone
+        if gone_count > 2:
             lock_door()
             state = State.BRAD_GONE
     else:
